@@ -3,6 +3,7 @@ import './App.css';
 import QuestionsList from './components/QuestionsList/QuestionsList';
 import SubjectsList from './components/SubjectsList/SubjectsList';
 import TopicsList from './components/TopicsList/TopicsList';
+import AnswersList from './components/AnswersList/AnswersList';
 
 const initState = {
   questions:[],
@@ -11,7 +12,8 @@ const initState = {
   seltop:[],
   topics:[],
   filteredq:[],
-  answerkeys:[]
+  answerkeys:[],
+  randomqs:[]
 }
 
 class App extends Component {
@@ -54,18 +56,51 @@ class App extends Component {
     }else{
       newSelTop = this.state.seltop.filter(e => e !== event.target.value)
     }
-    const filteredQuestions = this.state.questions.filter(q =>{
-      return newSelTop.includes(q.tid.toString())
+    this.setState({seltop:newSelTop})
+  }
+  loadQuestions = () => {
+    const {seltop,questions} = this.state
+
+    const filteredQuestions = questions.filter(q =>{
+      return seltop.includes(q.tid.toString())
     })
-    let shuffledFilteredQs = filteredQuestions
-    .map((a) => ({sort: Math.random(), value: a}))
+    let shuffledFilteredQs = this.shuffleArr(filteredQuestions)
+
+    const newQs = shuffledFilteredQs.map(q=> {
+    let choices = q.choices.concat(',',q.answer)
+    let choicesarr = choices.split(',')
+    let shuffledChoices = this.shuffleArr(choicesarr)
+    let answerID = shuffledChoices.indexOf(q.answer)
+      return Object.assign({}, q, {
+            choices:{
+              A:shuffledChoices[0],
+              B:shuffledChoices[1],
+              C:shuffledChoices[2],
+              D:shuffledChoices[3]
+            },
+            answerID: this.convertAnsIdToLet(answerID)
+          })
+    })
+    this.setState({randomqs:newQs})
+  }
+  convertAnsIdToLet = (data) => {
+    if(data === 0){
+      return "A"
+    }else if(data === 1){
+      return "B"
+    }else if(data === 2){
+      return "C"
+    }else if(data === 3){
+      return "D"
+    }else{
+      return
+    }
+  }
+  shuffleArr = (data) => {
+    let shuffled = data.map((a) => ({sort: Math.random(), value: a}))
     .sort((a, b) => a.sort - b.sort)
     .map((a) => a.value);
-    // console.log(filteredQuestions, 'filter')
-    // console.log(shuffledFilteredQs, 'shuffled qs')
-    this.setState({seltop:newSelTop, filteredq:shuffledFilteredQs})
-    const answerkeys = shuffledFilteredQs.map(ans=>ans.answer)
-    console.log(answerkeys)
+    return shuffled;
   }
   onShowAnswers = () => {
     
@@ -75,13 +110,22 @@ class App extends Component {
     this.loadAllSubjects()
   }
   render() {
-    const {questions,subjects,selsub,topics,seltop,filteredq} = this.state
-    console.log(filteredq)
+    const {subjects,selsub,topics,randomqs,seltop} = this.state
+  
     return (
       <div className="App">
       <SubjectsList checkedval={selsub} onSelectSubj={this.onSelectSubj} subjects={subjects}/>
-      <TopicsList topics={topics} onSelectTopic={this.onSelectTopic}/>
-      <QuestionsList questions={filteredq}/>
+      <TopicsList topics={topics} onSelectTopic={this.onSelectTopic} onShowQuestions={this.loadQuestions}/>
+      {
+        seltop.length >= 1 
+        ? 
+        <div>
+          <input onClick={this.loadQuestions} type="submit" value="Show Questions"/>
+        </div>
+        : <div></div>
+      }
+      <QuestionsList randomqs={randomqs}/>
+      
       </div>
     );
   }

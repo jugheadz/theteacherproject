@@ -1,18 +1,12 @@
 import React from 'react';
 
 const Choices = (props) => {
-  const {choices, answer} = props;
-  let newChoices = choices.split(',')
-  newChoices.push(answer);
-  let shuffledChoices = newChoices
-  .map((a) => ({sort: Math.random(), value: a}))
-  .sort((a, b) => a.sort - b.sort)
-  .map((a) => a.value);
+  const {choices} = props;
 
   return (
     <div>
     {
-        shuffledChoices.map((choice,i) => {
+        Object.values(choices).map((choice,i) => {
           return <li key={i}>{choice}</li>
         })
     }
