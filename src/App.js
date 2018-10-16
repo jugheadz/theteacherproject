@@ -3,7 +3,7 @@ import './App.css';
 import QuestionsList from './components/QuestionsList/QuestionsList';
 import SubjectsList from './components/SubjectsList/SubjectsList';
 import TopicsList from './components/TopicsList/TopicsList';
-import AnswersList from './components/AnswersList/AnswersList';
+//import AnswersList from './components/AnswersList/AnswersList';
 
 const initState = {
   questions:[],
@@ -13,7 +13,8 @@ const initState = {
   topics:[],
   filteredq:[],
   answerkeys:[],
-  randomqs:[]
+  randomqs:[],
+  substops:[]
 }
 
 class App extends Component {
@@ -27,21 +28,38 @@ class App extends Component {
       .then(questions => {this.setState({ questions:questions })})
       .catch(console.log)
   }
-  loadAllSubjects = () => {
-    fetch('http://localhost:3000/subjects/all')
+  // loadAllSubjects = () => {
+  //   fetch('http://localhost:3000/subjects/all')
+  //     .then(response => response.json())
+  //     .then(subjects => {this.setState({ subjects:subjects })})
+  //     .catch(console.log)
+  // }
+  
+  loadAllSubjectsTopics = () => {
+    fetch('http://localhost:3000/subjects/topics/all', {
+      method: 'post',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        uid:2
+      })
+      })
       .then(response => response.json())
-      .then(subjects => {this.setState({ subjects:subjects })})
-      .catch(console.log)
+      .then(substops => {this.setState({ substops:substops })})
+      .catch(console.log, 'load subject topics')
   }
   loadSubjectTopics = (sid) => {
-    fetch(`http://localhost:3000/subjects/${sid}/topics`)
-      .then(response => response.json())
-      .then(topics => {this.setState({ topics:topics })})
-      .catch(console.log)
+    const topics = this.state.substops.filter(t=>{
+      return t.subid === Number(sid)
+    })
+    this.setState({topics:topics})
+  }
+  loadSubjectTopicQs = () => {
+    
   }
   onSelectSubj = (event) => {
     //uncheck all topics checkbox
-    this.setState({topics:[], filteredq:[], seltop:[]})
+    this.unCheckAll()
+    this.setState({topics:[], randomqs:[], seltop:[]})
     if(event.target.checked){
       this.setState({
         selsub: event.target.value
@@ -83,6 +101,13 @@ class App extends Component {
     })
     this.setState({randomqs:newQs})
   }
+  unCheckAll = () => {
+        var items = document.getElementsByClassName('topics');
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].type === 'checkbox')
+                items[i].checked = false;
+        }
+    } 
   convertAnsIdToLet = (data) => {
     if(data === 0){
       return "A"
@@ -102,19 +127,17 @@ class App extends Component {
     .map((a) => a.value);
     return shuffled;
   }
-  onShowAnswers = () => {
-    
-  }
   componentDidMount () {
     this.loadAllQuestions()
-    this.loadAllSubjects()
+    //this.loadAllSubjects()
+    this.loadAllSubjectsTopics()
   }
   render() {
-    const {subjects,selsub,topics,randomqs,seltop} = this.state
-  
+    const {selsub,topics,randomqs,seltop,substops} = this.state
+    console.log(seltop)
     return (
       <div className="App">
-      <SubjectsList checkedval={selsub} onSelectSubj={this.onSelectSubj} subjects={subjects}/>
+      <SubjectsList checkedval={selsub} onSelectSubj={this.onSelectSubj} subjects={substops}/>
       <TopicsList topics={topics} onSelectTopic={this.onSelectTopic} onShowQuestions={this.loadQuestions}/>
       {
         seltop.length >= 1 

@@ -4,7 +4,6 @@ import Topics from '../Topics/Topics';
 const TopicsList = ({topics,onSelectTopic,onShowQuestions}) => {
   return (
     <div>
-     
       {
         topics.map((t,i)=>{
           return(
